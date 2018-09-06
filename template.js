@@ -49,23 +49,17 @@ class App {
 
 const app = new App({
   target: document.querySelector('#app'),
-  template: `
-  <div>
-    <h1>{{hi}} </h1>
-    <button @click="sayHello">{{how}}</button>
-    <p> {{hi}} </p>
-  </div>`,
   data: {
     hi: 'Hello how are you?!',
-    how: 'click this'
+    how: 'click this',
+    pText: 'This is some text.'
   },
   methods: {
     sayHello() {
-      app.updateData('hi', 'Welcome to this site!')
+      const name = prompt('What is your name?');
+      app._data.pText = `Hello ${name}! Thanks for visiting!`
     },
   },
 });
 
-// document.querySelector('#btn').addEventListener('click', () => {
-//   app._methods.sayHello()
-// });
+document.querySelector('#btn').addEventListener('click', app._methods.sayHello);
