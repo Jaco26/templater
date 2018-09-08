@@ -8,7 +8,8 @@ class App {
       anyTag: /<.*?>/g,
       tagsWithEvents: /<.*?@\w+=".+".*?>/g,
       tagsWithIds: /<.*?id=".\w".*?>/g,
-    }
+    };
+    this.evtTags = [];
 
     this._target = target;
     this._template = template || target.innerHTML.trim();
@@ -35,14 +36,26 @@ class App {
   compileTemplate() {
     let template = this._template;
     const { handleBar, tagsWithEvents } = this.reDict;
-    const expressions = template.match(handleBar)
-
+    this.evtTags = template.match(tagsWithEvents);
+    const expressions = template.match(handleBar);
     expressions.forEach(str => {
       const trimmed = str.slice(2, -2);   
       template = template.replace(str, this._data[trimmed]);
     });  
-    
     this._target.innerHTML = template;
+    this.setListeners();
+  }
+
+  setListeners() {
+    console.log(this.evtTags);
+    this.evtTags.forEach(evtTag => {
+      const evtDirective = evtTag.match(this.reDict.event)[0];
+      const evtName = evtDirective.slice(1, evtDirective.indexOf('='));
+      
+      console.log(evtName);
+      
+      document.addEventListener()
+    });
   }
 
 }
