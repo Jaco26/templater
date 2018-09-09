@@ -10,14 +10,16 @@
 
   <div id="app">
     <h1>{{hi}} </h1>
-    <button id="btn" @click="sayHello">Say Hello</button>
-    <button id="say-goodbye" @dblclick="sayGoodbye">Say Goodbye</button>
+    <button @click="sayHello">Say Hello</button>
+    <button @dblclick="sayGoodbye">Say Goodbye</button>
     <p> {{pText}} </p>
-    <button id="add-one" @click="addOne">Add One</button>
-    <p>{{counter}}</p>
+    <button @click="addOne">{{counter}}</button>
+    <input type="text" @input="showInput">
+    <div>{{inputResult}}</div>
   </div>
 
-  <script src="template.js"></script>
+  <script src="app-class.js"></script>
+  <script src="app.js"></script>
 
 </body>
 </html>
