@@ -6,6 +6,9 @@ const app = new App({
     how: 'click this',
     pText: 'This is some text.',
     counter: 0,
+    parent: {
+      child: 'Hello hello I am the child'
+    },
     inputResult: '',
   },
   methods: {

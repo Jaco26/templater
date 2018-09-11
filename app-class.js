@@ -63,16 +63,26 @@ class App {
     const { tagsWithHandleBarVals, tagsWithEvents, handleBar, event } = this.reDict;
   
     let template = this._template;
+
     let dataIdCount = 0;
     let listenIdCount = 0;
 
-    const hdlBarValTags = template.match(tagsWithHandleBarVals);
+    const hdlBarValTags = template.match(handleBar);
     if (hdlBarValTags) {
       hdlBarValTags.forEach(item => {
         const hdlBar = item.match(handleBar)[0].slice(2, -2);
-        const hdlBarVal = this._data[hdlBar];
-        const dataTag = `data-data-id="${dataIdCount}"`;
-        const withHdlBarVal = item.replace(handleBar, `<span ${dataTag}>${hdlBarVal}</span>`);
+        let hdlBarVal;
+        if (hdlBar.split('.').length === 1) {
+          hdlBarVal = this._data[hdlBar];
+        } else {
+          let mockData = this._data;
+          hdlBarVal = hdlBar.split('.').reduce((a, b) => {
+            a = a[b];
+            return a;
+          }, mockData);
+        }
+        const data = `data-data-id="${dataIdCount}"`;
+        const withHdlBarVal = item.replace(handleBar, `<span ${data}>${hdlBarVal}</span>`);
         const final = withHdlBarVal;
         this.vDom.data[hdlBar] = dataIdCount;
         template = template.replace(item, final);
