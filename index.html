@@ -5,20 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>The Templater</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div id="app">
-    <h1>{{hi}} </h1>
-    <button @click="sayHello">Say Hello</button>
-    <button @dblclick="sayGoodbye">Say Goodbye</button>
-    <p> {{pText}} </p>
-    <button @click="addOne">{{counter}}</button>
-    <input type="text" @input="showInput">
-    <div> 
-      <p>Hello My name is {{inputResult}}</p>  
+    <div class="container">
+      <div class="flex-row wrap">
+        <div class="flex f1 text-center">
+          <h1>{{hi}} </h1>
+          <button @click="sayHello">Say Hello</button>
+          <button @dblclick="sayGoodbye">Say Goodbye</button>
+          <p> {{pText}} </p>
+          <button @click="addOne">{{counter}}</button>
+          <input type="text" @input="showInput" @click="test">
+          <div>
+            <p>Hello My name is {{inputResult}}</p>
+          </div>
+          <div> {{parent.child}} </div>
+        </div>
+      </div>
     </div>
-    <div> {{parent.child}} </div>
   </div>
 
   <script src="app-class.js"></script>

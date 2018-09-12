@@ -24,7 +24,13 @@ const app = new App({
     },
     showInput(e) {
       this.inputResult = e.target.value;
-    }
+    },
+    test() {
+      console.log('Test if two listen directives in same tag will result in two events being registered!');
+    },
   },
 });
 
+var btn = document.querySelectorAll('[data-listen-id="2"]')
+
+// console.log(btn);

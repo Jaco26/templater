@@ -1,3 +1,16 @@
+const utils = {
+  unpackObject(propsPath, source) {
+    if (propsPath.split('.').length === 1) {
+      return source[propsPath];
+    }
+    let mockSource = source;
+    return propsPath.split('.').reduce((a, b) => {
+      a = a[b];
+      return a;
+    }, mockSource);
+  }
+}
+
 
 class App {
   constructor({ target, template, data, methods }) {
@@ -12,7 +25,7 @@ class App {
       data: {},
       listen: {},
     }
-    
+
     this._target = target;
     this._template = template || target.innerHTML;
     this._data = this.wrapData(data);
@@ -44,24 +57,25 @@ class App {
   setListeners() {
     if (this._methods && Object.keys(this._methods).length > 0) {
       Object.keys(this.vDom.listen).forEach(key => {
-        const listen = this.vDom.listen[key];
-        const targetEl = document.querySelector(`[data-listen-id="${listen.id}"]`)
+        const listen = this.vDom.listen[key];        
+        const targetEl = document.querySelector(`[data-listen${listen.n}-id="${listen.id}"]`);        
         targetEl.addEventListener(listen.eventName, this._methods[key.slice(1, -1)]);
       });
     }
-   
+
   }
 
   updateTextContent(dataKey) {
     const vDomElId = this.vDom.data[dataKey];
-    if (vDomElId) {
-      document.querySelector(`[data-data-id="${vDomElId}"]`).textContent = this._data[dataKey];
+    if (vDomElId >= 0) {
+      const newTextContent = utils.unpackObject(dataKey, this._data);
+      document.querySelector(`[data-data-id="${vDomElId}"]`).textContent = newTextContent;
     }
   }
 
   compileTemplate() {
-    const { tagsWithHandleBarVals, tagsWithEvents, handleBar, event } = this.reDict;
-  
+    const { tagsWithEvents, handleBar, event } = this.reDict;
+
     let template = this._template;
 
     let dataIdCount = 0;
@@ -71,16 +85,7 @@ class App {
     if (hdlBarValTags) {
       hdlBarValTags.forEach(item => {
         const hdlBar = item.match(handleBar)[0].slice(2, -2);
-        let hdlBarVal;
-        if (hdlBar.split('.').length === 1) {
-          hdlBarVal = this._data[hdlBar];
-        } else {
-          let mockData = this._data;
-          hdlBarVal = hdlBar.split('.').reduce((a, b) => {
-            a = a[b];
-            return a;
-          }, mockData);
-        }
+        const hdlBarVal = utils.unpackObject(hdlBar, this._data);
         const data = `data-data-id="${dataIdCount}"`;
         const withHdlBarVal = item.replace(handleBar, `<span ${data}>${hdlBarVal}</span>`);
         const final = withHdlBarVal;
@@ -89,25 +94,30 @@ class App {
         dataIdCount += 1
       });
     }
-    
+
     const eventTags = template.match(tagsWithEvents);
     if (eventTags) {
       eventTags.forEach(item => {
-        const evt = item.match(event)[0];
-        const eventName = evt.slice(1, evt.indexOf('='));
-        const eventHandler = evt.slice(evt.indexOf('=') + 1);
-        this.vDom.listen[eventHandler] = {
-          id: listenIdCount,
-          eventName,
-        };
-        template = template.replace(evt, ` data-listen-id="${listenIdCount}"`);
-        listenIdCount += 1;
+        const evts = item.match(event);
+        console.log();
+        evts.forEach((evt, i, arr) => {
+          const eventName = evt.slice(1, evt.indexOf('='));
+          const eventHandler = evt.slice(evt.indexOf('=') + 1);
+          this.vDom.listen[eventHandler] = {
+            id: listenIdCount,
+            n: i,
+            eventName,
+          };
+          template = template.replace(evt, ` data-listen${i}-id="${listenIdCount}"`);          
+          listenIdCount += 1;
+        });
       });
     }
-    
+
     this._target.innerHTML = template;
     this.setListeners();
   }
-  
+
 
 }
+
