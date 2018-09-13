@@ -8,18 +8,19 @@ const utils = {
       a = a[b];
       return a;
     }, mockSource);
+  },
+  reDict: {
+    event: /@\w+="\w+"/g,
+    handleBar: /{{.+}}/g,
+    tagsWithEvents: /<.*?@\w+=".+".*?>/g,
+    tagsWithHandleBarVals: /<.*?>.*{{\w+}}/g,
   }
 }
 
 
+
 class App {
-  constructor({ target, template, data, methods }) {
-    this.reDict = {
-      event: /@\w+="\w+"/g,
-      handleBar: /{{.+}}/g,
-      tagsWithEvents: /<.*?@\w+=".+".*?>/g,
-      tagsWithHandleBarVals: /<.*?>.*{{\w+}}/g,
-    };
+  constructor({ target, template, data = {}, methods = {}, windowListeners = {}, mounted }) {
 
     this.vDom = {
       data: {},
@@ -32,6 +33,20 @@ class App {
     this._methods = this.bindMethodsToData(methods);
 
     this.compileTemplate();
+    this.setWindowListeners(windowListeners);
+    this.isMounted(mounted);
+
+  }
+
+  isMounted(mounted) {
+    const newMounted = mounted.bind(this._data);
+    return newMounted();
+  }
+
+  setWindowListeners(windowListeners) {
+    Object.entries(windowListeners).forEach(([eventName, handlerName]) => {
+      document.addEventListener(eventName, this._methods[handlerName]);
+    });
   }
 
   bindMethodsToData(methods) {
@@ -57,8 +72,8 @@ class App {
   setListeners() {
     if (this._methods && Object.keys(this._methods).length > 0) {
       Object.keys(this.vDom.listen).forEach(key => {
-        const listen = this.vDom.listen[key];        
-        const targetEl = document.querySelector(`[data-listen${listen.n}-id="${listen.id}"]`);        
+        const listen = this.vDom.listen[key];
+        const targetEl = document.querySelector(`[data-listen${listen.n}-id="${listen.id}"]`);
         targetEl.addEventListener(listen.eventName, this._methods[key.slice(1, -1)]);
       });
     }
@@ -74,7 +89,7 @@ class App {
   }
 
   compileTemplate() {
-    const { tagsWithEvents, handleBar, event } = this.reDict;
+    const { tagsWithEvents, handleBar, event } = utils.reDict;
 
     let template = this._template;
 
@@ -108,7 +123,7 @@ class App {
             n: i,
             eventName,
           };
-          template = template.replace(evt, ` data-listen${i}-id="${listenIdCount}"`);          
+          template = template.replace(evt, ` data-listen${i}-id="${listenIdCount}"`);
           listenIdCount += 1;
         });
       });
@@ -118,6 +133,4 @@ class App {
     this.setListeners();
   }
 
-
 }
-
