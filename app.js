@@ -2,6 +2,7 @@
 const app = new App({
   target: document.querySelector('#app'),
   data: {
+    me: '',
     hi: 'Hello how are you?!',
     how: 'click this',
     pText: 'This is some text.',
@@ -22,15 +23,6 @@ const app = new App({
     addOne() {
       this.counter += 1;
     },
-    showInput(e) {
-      this.inputResult = e.target.value;
-    },
-    test() {
-      console.log('Test if two listen directives in same tag will result in two events being registered!');
-    },
   },
 });
 
-var btn = document.querySelectorAll('[data-listen-id="2"]')
-
-// console.log(btn);

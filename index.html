@@ -13,12 +13,14 @@
     <div class="container">
       <div class="flex-row wrap">
         <div class="flex f1 text-center">
+          <input type="text" j-model="me">
+          {{me}}
           <h1>{{hi}} </h1>
           <button @click="sayHello">Say Hello</button>
           <button @dblclick="sayGoodbye">Say Goodbye</button>
           <p> {{pText}} </p>
           <button @click="addOne">{{counter}}</button>
-          <input type="text" @input="showInput" @click="test">
+          <input type="text" j-model="inputResult">
           <div>
             <p>Hello My name is {{inputResult}}</p>
           </div>
