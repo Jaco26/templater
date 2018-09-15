@@ -3,7 +3,7 @@ const app = new App({
   target: document.querySelector('#app'),
   data: {
     me: '',
-    hi: 'Hello how are you?!',
+    hi: 'Headline!',
     how: 'click this',
     pText: 'This is some text.',
     counter: 0,
@@ -11,6 +11,7 @@ const app = new App({
       child: 'Hello hello I am the child'
     },
     inputResult: '',
+    checkbox: false,
   },
   methods: {
     sayHello() {

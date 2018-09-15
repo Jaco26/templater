@@ -9,6 +9,7 @@ const utils = {
       return a;
     }, mockSource);
   },
+
   reDict: {
     event: /@\w+="\w+"/g,
     handleBar: /{{.+}}/g,
@@ -53,6 +54,14 @@ class App {
     });
   }
 
+  setListener(targetEl, dataKey, eventName, eTargetVal) {
+    console.log(targetEl);
+    
+    targetEl.addEventListener(eventName, (e) => {
+      this._data[dataKey] = e.target[eTargetVal];
+    });
+  }
+
   bindMethodsToData(methods) {
     return Object.keys(methods).reduce((accum, methodKey) => {
       accum[methodKey] = methods[methodKey].bind(this._data);
@@ -66,7 +75,7 @@ class App {
         get: () => data[dataKey],
         set: val => {
           data[dataKey] = val;
-          this.updateTextContent(dataKey);
+          this.uppdateDomValue(dataKey)
         }
       });
       return accum;
@@ -78,10 +87,16 @@ class App {
     Object.keys(models).forEach(key => {
       const model = models[key];
       const targetEl = document.querySelector(`[data-model-id="${model.id}"]`);
-      targetEl.addEventListener('input', (e) => {
-        this._data[key] = e.target.value;
-      })
-    })
+      switch(targetEl.type) {
+        case 'text':
+          this.setListener(targetEl, key, 'input', 'value');
+          break;
+        case 'radio':          
+        case 'checkbox':          
+          this.setListener(targetEl, key, 'input', 'checked');
+          break;
+      }
+    });
   }
 
   setListeners() {
@@ -94,9 +109,13 @@ class App {
     }
   }
 
-  updateTextContent(dataKey) {
-    const vDomElId = this.vDom.data[dataKey].id;
-    if (vDomElId >= 0) {
+  uppdateDomValue(dataKey) {
+    this.updateTextContent(dataKey)
+  }
+
+  updateTextContent(dataKey) {    
+    if (this.vDom.data[dataKey]) {
+      const vDomElId = this.vDom.data[dataKey].id;
       const newTextContent = utils.unpackObject(dataKey, this._data);
       document.querySelector(`[data-data-id="${vDomElId}"]`).textContent = newTextContent;
     }
@@ -113,8 +132,8 @@ class App {
 
     const hdlBarValTags = template.match(handleBar);
     if (hdlBarValTags) {
-      hdlBarValTags.forEach(item => {
-        const hdlBar = item.match(handleBar)[0].slice(2, -2);
+      hdlBarValTags.forEach(item => {        
+        const hdlBar = item.match(handleBar)[0].slice(2, -2).trim();
         const hdlBarVal = utils.unpackObject(hdlBar, this._data);
         const data = `data-data-id="${dataIdCount}"`;
         const withHdlBarVal = item.replace(handleBar, `<span ${data}>${hdlBarVal}</span>`);
@@ -155,6 +174,7 @@ class App {
           template = template.replace(directive, `data-model-id="${modelIdCount}"`);
           modelIdCount += 1;
         });
+        console.log(this.vDom);
       }
     }
 
