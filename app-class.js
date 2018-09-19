@@ -10,10 +10,18 @@ const utils = {
     }, mockSource);
   },
 
+  parseTemplateFunctionArgs(args) {
+    if (args) {
+      return args[0].slice(1, -1).split(',').map(arg => arg.trim());
+    }
+  },
+
   reDict: {
-    event: /@\w+="\w+"/g,
-    handleBar: /{{.+}}/g,
+    event: /@\w+="\w+(\(.*\))*"/g,
+    eventHandler: /(?!@\w+=)"\w+(\(.+\)?)*>*"/g,
+    args: /\(.+\)/g,
     tagsWithEvents: /<.*?@\w+=".+".*?>/g,
+    handleBar: /{{.+}}/g,
     tagsWithJModels: /<.*?j-model=".+".*?>/g,
     jModel: /j-model="\w+"/g,
 
@@ -54,9 +62,7 @@ class App {
     });
   }
 
-  setListener(targetEl, dataKey, eventName, eTargetVal) {
-    console.log(targetEl);
-    
+  setListener(targetEl, dataKey, eventName, eTargetVal) {    
     targetEl.addEventListener(eventName, (e) => {
       this._data[dataKey] = e.target[eTargetVal];
     });
@@ -122,7 +128,16 @@ class App {
   }
 
   compileTemplate() {
-    const { tagsWithJModels, jModel, tagsWithEvents, event, handleBar, betweenQuotes } = utils.reDict;
+    const { 
+      tagsWithJModels, 
+      jModel, 
+      tagsWithEvents, 
+      event, 
+      eventHandler,
+      args,
+      handleBar, 
+      betweenQuotes 
+    } = utils.reDict;
 
     let template = this._template;
 
@@ -150,13 +165,22 @@ class App {
     if (eventTags) {
       eventTags.forEach(item => {
         const evts = item.match(event);
+        console.log(evts);
+        
         evts.forEach((evt, i) => {
-          const eventName = evt.slice(1, evt.indexOf('='));
-          const eventHandler = evt.slice(evt.indexOf('=') + 1);
-          this.vDom.listen[eventHandler] = {
+          const evtName = evt.slice(1, evt.indexOf('='));
+          const evtHandler = evt.match(eventHandler)[0].slice(1, -1);
+          console.log(evt);
+          console.log(evtHandler);
+          const fnArgs = utils.parseTemplateFunctionArgs(evtHandler.match(args));
+
+          
+          
+          this.vDom.listen[evtHandler] = {
             id: listenIdCount,
             n: i,
-            eventName,
+            eventName: evtName,
+            args: fnArgs
           };
           template = template.replace(evt, `data-listen${i}-id="${listenIdCount}"`);
           listenIdCount += 1;
@@ -178,6 +202,7 @@ class App {
       }
     }
 
+   
     this._target.innerHTML = template;
     this.setListeners();
     this.setJModelListeners();
