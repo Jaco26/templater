@@ -45,6 +45,8 @@ class App {
     this._data = this.wrapData(data);
     this._methods = this.bindMethodsToData(methods);
 
+    // this.compileTemplate = TemplateComp.compileTemplate; // use template-compiler.js
+
     this.compileTemplate();
     this.setWindowListeners(windowListeners);
     this.isMounted(mounted);
