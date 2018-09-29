@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <div id="app">
+  <!-- <div id="app">
     <div class="container">
       <div class="flex-row wrap">
         <div class="flex f1 text-center">
@@ -30,11 +30,36 @@
         </div>
       </div>
     </div>
-
   </div>
 
+
+
   <script src="app-class.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js"></script> -->
+
+  <div id="app">
+    <h1>{{this.greeting + ' ' + this.name}}</h1>
+    <button @click="hihi">Click Me</button>
+  </div>
+
+  <script src="reactive-template.js"></script>
+  <script>
+  
+  const app = new ReactiveTemplate({
+    target: '#app',
+    data: {
+      greeting: 'Welcome',
+      name: '',
+    },
+    methods: {
+      hihi() {
+        const name = prompt('What is your name?');
+        this.name = name[0].toUpperCase() + name.slice(1).toLowerCase();
+      }
+    }
+  })
+
+  </script>
 
 </body>
 </html>

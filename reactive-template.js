@@ -1,19 +1,27 @@
+const utils = {
+  evaluate: function (exprStr) {
+    const func = Function('"use strict";return (' + exprStr + ')');
+    return func.call(this);
+  },
+}
+
 class ReactiveTemplate {
   constructor({ target, data, methods, template }) {
     this._target = document.querySelector(target);
-    this._template = template || this._target.innerHTML;
-
     this._vDom = {
       eventListeners: {},
       models: {},
       expressions: {},
       dataDependents: {}
     };
-
     this._data = this.wrapData(data);
     this._methods = this.wrapMethods(methods);
 
-    this.compileTemplate();
+    this.errorHandler = {
+      compileTemplateError: [],
+    }
+
+    this.compileTemplate(template || this._target.innerHTML);
   }
 
   notifyVDom(key) {
@@ -30,7 +38,7 @@ class ReactiveTemplate {
       Object.defineProperty(accum, key, {
         get: () => appData[key],
         set: val => {
-          appData[key] = val
+          appData[key] = val;
           this.notifyVDom(key);
         },
       });
@@ -69,31 +77,33 @@ class ReactiveTemplate {
     }
   }
 
-  evaluateExpressions(exprs) {
-    const expressions = exprs || this._vDom.expressions;
+  setReferences() {
+    const expressions = this._vDom.expressions;
     if (expressions) {
       Object.keys(expressions).forEach(key => {
-        const el = document.querySelector(expressions[key].domKey);
-        const expVal = evaluate.call(this._data, expressions[key].exp)
-
-        function evaluate(exprStr) {
-          return eval(exprStr);
-        }
-
-        el.textContent = expVal;
+        expressions[key].el = document.querySelector(expressions[key].domKey);
       });
     }
   }
 
-  compileTemplate() {
+  evaluateExpressions(exprs) {
+    const expressions = exprs || this._vDom.expressions;
+    if (expressions) {
+      Object.keys(expressions).forEach(key => {
+        expressions[key].el.textContent = utils.evaluate.call(this._data, expressions[key].exp);
+      });
+    }
+  }
+
+  compileTemplate(inputTemplate) {
     const eventTagRe = /<.*?@\w+=".+".*?>/g;
     const eventDirRe = /@\w+="\w+(\(.*\))*"/g;
     const modelTagRe = /<.*?model=".+".*?>/g;
     const modelDirRe = /model="\w+"/g;
-    const handleBarRe = /{{.+}}/g;
+    const handleBarRe = /{{.+?}}/g;
     const dataDepRe = /this\.\w+/g;
 
-    let template = this._template;
+    let template = inputTemplate;
 
     let eventListenerCount = 1;
     let modelCount = 1;
@@ -102,7 +112,7 @@ class ReactiveTemplate {
     const tagsWithEventDirectives = template.match(eventTagRe);
     if (tagsWithEventDirectives) {
       tagsWithEventDirectives.forEach(tag => {
-        let newTag = tag
+        let newTag = tag;
         const tagEvents = newTag.match(eventDirRe);
         tagEvents.forEach((evt, i) => {
           const evtName = evt.slice(1, evt.indexOf('='));
@@ -143,12 +153,15 @@ class ReactiveTemplate {
           domKey: `[data-exp-id="${handleBarCount}"]`
         }
         const dataDeps = expStr.match(dataDepRe);
-        // console.log(dataDeps);
         dataDeps.forEach(dep => {
           const depKey = dep.slice(dep.indexOf('.') + 1);
-          this._vDom.dataDependents[depKey] = [...this._vDom.dataDependents[depKey], handleBarCount]
+          if (!this._vDom.dataDependents[depKey]) {
+            this.errorHandler.compileTemplateError.push(`${depKey} was referenced in the template but it was not defined on the instance.`);
+          } else {
+            this._vDom.dataDependents[depKey] = [...this._vDom.dataDependents[depKey], handleBarCount];
+          }
         });
-        template = template.replace(expression, `<span data-exp-id="${handleBarCount}"></span>`)
+        template = template.replace(expression, `<span data-exp-id="${handleBarCount}"></span>`);
         handleBarCount += 1;
       });
     }
@@ -157,9 +170,20 @@ class ReactiveTemplate {
 
     this.bindModels();
     this.setListeners();
+    this.setReferences();
     this.evaluateExpressions();
+
+    this.logErrors();
 
   }
 
+  logErrors() {
+    Object.keys(this.errorHandler).forEach(key => {
+      this.errorHandler[key].forEach(err => {
+        console.error(`${key}: ${err}`);
+      });
+      this.errorHandler[key] = [];
+    });
+  }
 
 }
