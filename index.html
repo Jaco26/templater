@@ -39,7 +39,9 @@
 
   <div id="app">
     <h1>{{this.greeting + ' ' + this.name}}</h1>
-    <button @click="hihi">Click Me</button>
+    <button @click="hihi(this.art, 9)">Click Me</button>
+    <button @click="sayBye">Say Bye</button>
+    {{this.art}}
   </div>
 
   <script src="reactive-template.js"></script>
@@ -50,11 +52,19 @@
     data: {
       greeting: 'Welcome',
       name: '',
+      art: 'Sculpture',
+      numbers: [1,2,3,4]
     },
     methods: {
-      hihi() {
-        const name = prompt('What is your name?');
-        this.name = name[0].toUpperCase() + name.slice(1).toLowerCase();
+      hihi(art, num) {
+        console.log(art, num);
+        
+        // const name = prompt('What is your name?');
+        // this.name = name[0].toUpperCase() + name.slice(1).toLowerCase();
+      },
+      sayBye() {
+        console.log('ByeBye');
+        
       }
     }
   })

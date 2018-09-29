@@ -1,8 +1,25 @@
 const utils = {
   evaluate: function (exprStr) {
     const func = Function('"use strict";return (' + exprStr + ')');
+    console.log(func.call(this));
+    
     return func.call(this);
   },
+  parseTemplateFnInvoke: function(fnInvokeStr) {
+    const wArgsRe = /\w+\(.+\)/g;
+    const parensWArgsRe = /\(.+\)/g;
+    const handler = {
+      name: fnInvokeStr.match(/\w+/g)[0], // in case the fnInvokeStr ends with `()`
+      args: [],
+    };
+    if (wArgsRe.test(fnInvokeStr)) {
+      handler.args = fnInvokeStr.match(parensWArgsRe)[0] // => "(arg1, arg2, ...)"
+        .slice(1, -1) // => "arg1, arg2, ..."
+        .split(',') // => ["arg1", " arg2", ...]
+        .map(arg => arg.trim()); // => ["arg1", "arg2", ...]
+    } 
+    return handler;
+  }
 }
 
 class ReactiveTemplate {
@@ -29,7 +46,7 @@ class ReactiveTemplate {
       accum.push(this._vDom.expressions[exprKey]);
       return accum;
     }, []);
-    this.evaluateExpressions(effectedDependentExpressions)
+    this.evaluateExpressions(true, effectedDependentExpressions)
   }
 
   wrapData(appData) {
@@ -69,10 +86,13 @@ class ReactiveTemplate {
     const listeners = this._vDom.eventListeners;
     if (listeners) {
       Object.keys(listeners).forEach(key => {
-        const evtName = listeners[key].name;
-        const handler = listeners[key].handler;
-        const el = document.querySelector(listeners[key].domKey);
-        el.addEventListener(evtName, handler);
+        const evtName = listeners[key].eventName;        
+        const handlerName = listeners[key].handler.name;
+        const handlerArgs = this.evaluateExpressions(null, listeners[key].handler.args);        
+        const el = document.querySelector(listeners[key].domKey);        
+        el.addEventListener(evtName, (function (e) {
+          this._methods[handlerName].apply(this._data, handlerArgs);
+        }).bind(this))
       });
     }
   }
@@ -86,12 +106,19 @@ class ReactiveTemplate {
     }
   }
 
-  evaluateExpressions(exprs) {
+  evaluateExpressions(applyToTemplate, exprs) {
     const expressions = exprs || this._vDom.expressions;
     if (expressions) {
-      Object.keys(expressions).forEach(key => {
-        expressions[key].el.textContent = utils.evaluate.call(this._data, expressions[key].exp);
-      });
+      // If the applyToTemplate flag is passed as `true`, each evaluated expression
+      // will be immediatly set as its dependents' text content
+      if (applyToTemplate) {
+        Object.keys(expressions).forEach(key => {
+          expressions[key].el.textContent = utils.evaluate.call(this._data, expressions[key].exp);
+        });
+      } else {
+        // Otherwise, the evaluated expressions will be returned as an array
+        return expressions.map(exp => utils.evaluate.call(this._data, exp));
+      }
     }
   }
 
@@ -112,16 +139,16 @@ class ReactiveTemplate {
     const tagsWithEventDirectives = template.match(eventTagRe);
     if (tagsWithEventDirectives) {
       tagsWithEventDirectives.forEach(tag => {
-        let newTag = tag;
+        let newTag = tag;        
         const tagEvents = newTag.match(eventDirRe);
         tagEvents.forEach((evt, i) => {
           const evtName = evt.slice(1, evt.indexOf('='));
-          const evtHandler = evt.slice(evt.indexOf('=') + 2, -1);
+          const fnInokeStr = evt.slice(evt.indexOf('=') + 2, -1);          
           this._vDom.eventListeners[eventListenerCount] = {
-            name: evtName,
+            eventName: evtName,
             domKey: `[data-event${i + 1}-id="${eventListenerCount}"]`,
-            handler: this._methods[evtHandler],
-          };
+            handler: utils.parseTemplateFnInvoke(fnInokeStr)
+          };          
           newTag = newTag.replace(evt, `data-event${i + 1}-id="${eventListenerCount}"`);
           eventListenerCount += 1;
         });
@@ -171,7 +198,7 @@ class ReactiveTemplate {
     this.bindModels();
     this.setListeners();
     this.setReferences();
-    this.evaluateExpressions();
+    this.evaluateExpressions(true);
 
     this.logErrors();
 
