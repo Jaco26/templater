@@ -40,7 +40,8 @@
   <div id="app">
     <h1>{{this.greeting + ' ' + this.name}}</h1>
     <button @click="hihi(this.art, 9)">Click Me</button>
-    <button @click="sayBye">Say Bye</button>
+    <button @click="sayBye('hello')">Say Bye</button>
+    <button @click="changeArt">click</button>
     {{this.art}}
   </div>
 
@@ -58,16 +59,16 @@
     methods: {
       hihi(art, num) {
         console.log(art, num);
-        
-        // const name = prompt('What is your name?');
-        // this.name = name[0].toUpperCase() + name.slice(1).toLowerCase();
       },
-      sayBye() {
-        console.log('ByeBye');
+      sayBye(arg) {
+        console.log('ByeBye', arg);
         
-      }
+      },
+      // changeArt() {
+      //   this.art = 'Hello how are you?'
+      // }
     }
-  })
+  });
 
   </script>
 

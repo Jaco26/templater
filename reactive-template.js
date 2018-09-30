@@ -1,8 +1,6 @@
 const utils = {
   evaluate: function (exprStr) {
-    const func = Function('"use strict";return (' + exprStr + ')');
-    console.log(func.call(this));
-    
+    const func = Function('"use strict";return (' + exprStr + ')');    
     return func.call(this);
   },
   parseTemplateFnInvoke: function(fnInvokeStr) {
@@ -16,7 +14,7 @@ const utils = {
       handler.args = fnInvokeStr.match(parensWArgsRe)[0] // => "(arg1, arg2, ...)"
         .slice(1, -1) // => "arg1, arg2, ..."
         .split(',') // => ["arg1", " arg2", ...]
-        .map(arg => arg.trim()); // => ["arg1", "arg2", ...]
+        .map(arg => arg.trim()); // => ["arg1", "arg2", ...] 
     } 
     return handler;
   }
@@ -46,7 +44,7 @@ class ReactiveTemplate {
       accum.push(this._vDom.expressions[exprKey]);
       return accum;
     }, []);
-    this.evaluateExpressions(true, effectedDependentExpressions)
+    this.evaluateTemplateExpressions(effectedDependentExpressions)
   }
 
   wrapData(appData) {
@@ -88,7 +86,7 @@ class ReactiveTemplate {
       Object.keys(listeners).forEach(key => {
         const evtName = listeners[key].eventName;        
         const handlerName = listeners[key].handler.name;
-        const handlerArgs = this.evaluateExpressions(null, listeners[key].handler.args);        
+        const handlerArgs = this.evaluateTemplateFnArguments(listeners[key].handler.args);        
         const el = document.querySelector(listeners[key].domKey);        
         el.addEventListener(evtName, (function (e) {
           this._methods[handlerName].apply(this._data, handlerArgs);
@@ -106,19 +104,16 @@ class ReactiveTemplate {
     }
   }
 
-  evaluateExpressions(applyToTemplate, exprs) {
+  evaluateTemplateFnArguments(args) {
+    return args.map(exp => utils.evaluate.call(this._data, exp));
+  }
+
+  evaluateTemplateExpressions(exprs) {
     const expressions = exprs || this._vDom.expressions;
     if (expressions) {
-      // If the applyToTemplate flag is passed as `true`, each evaluated expression
-      // will be immediatly set as its dependents' text content
-      if (applyToTemplate) {
-        Object.keys(expressions).forEach(key => {
-          expressions[key].el.textContent = utils.evaluate.call(this._data, expressions[key].exp);
-        });
-      } else {
-        // Otherwise, the evaluated expressions will be returned as an array
-        return expressions.map(exp => utils.evaluate.call(this._data, exp));
-      }
+      Object.keys(expressions).forEach(key => {
+        expressions[key].el.textContent = utils.evaluate.call(this._data, expressions[key].exp);
+      });
     }
   }
 
@@ -198,7 +193,7 @@ class ReactiveTemplate {
     this.bindModels();
     this.setListeners();
     this.setReferences();
-    this.evaluateExpressions(true);
+    this.evaluateTemplateExpressions();
 
     this.logErrors();
 
