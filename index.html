@@ -9,39 +9,12 @@
 </head>
 <body>
 
-  <!-- <div id="app">
-    <div class="container">
-      <div class="flex-row wrap">
-        <div class="flex f1 text-center">
-          <input type="text" j-model="me">
-          {{me}}
-          <h1>{{hi}} </h1>
-          <button @click="sayHello">Say Hello</button>
-          <button @dblclick="sayGoodbye">Say Goodbye</button>
-          <p> {{pText}} </p>
-          <button @click="addOne('Hello')" >{{counter}}</button>
-          <input type="text" j-model="inputResult">
-          <div>
-            <p>Hello My name is {{inputResult}}</p>
-          </div>
-          <div> {{parent.child}} </div>
-          <input type="checkbox" j-model="checkbox">
-          {{ checkbox }}
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-
-  <script src="app-class.js"></script>
-  <script src="app.js"></script> -->
-
   <div id="app">
-    <h1>{{this.greeting + ' ' + this.name}}</h1>
+    <h1 @click="changeGreeting">{{this.greeting + ' ' + this.name}}</h1>
     <button @click="hihi(this.art, 9)">Click Me</button>
     <button @click="sayBye('hello')">Say Bye</button>
     <button @click="changeArt">click</button>
+    <input type="text" model="name">
     {{this.art}}
   </div>
 
@@ -64,13 +37,18 @@
         console.log('ByeBye', arg);
         
       },
-      // changeArt() {
-      //   this.art = 'Hello how are you?'
-      // }
+      changeArt() {
+        this.art = 'Hello how are you?'
+      },
+      changeGreeting() {
+        this.greeting = 'HEY!';
+      }
     }
   });
 
   </script>
+
+  <script src="computed-properties.js"></script>
 
 </body>
 </html>
