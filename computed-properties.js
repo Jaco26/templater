@@ -2,9 +2,10 @@ class WithComputedProps {
   constructor({ data, computed }) {
     this.test = 'Hello'
     this.computedDependencies = {
-      name: 'i'
+      
     };
     this.allData = this.setAllData(data, computed);
+    console.log(this.allData);
     
   }
 
@@ -23,15 +24,18 @@ class WithComputedProps {
     });
 
     this.setDepRefs(dataKeys, computed);
-    this.evaluateComputed(data, computed);
+    Object.assign(result, result, this.evaluateComputed(data, computed));
 
+    // console.log(this.computedDependencies);
+    console.log(result);
+    
   }
 
   evaluateComputed(data, computed) {    
-    Object.keys(computed).forEach(key => {
-      console.log(computed[key].call(data))
-    })
-    
+    return Object.keys(computed).reduce((accum, key) => {
+      accum[key] = computed[key].call(data);
+      return accum;
+    }, {});
   }
 
   setDepRefs(dataKeys, computed) {
