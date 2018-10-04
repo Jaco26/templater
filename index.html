@@ -12,7 +12,7 @@
   <div id="app">
     <h1 @click="changeGreeting">{{this.greeting + ' ' + this.name}}</h1>
     <button @click="hihi(this.art, 9)">Click Me</button>
-    <button @click="sayBye('hello')">Say Bye</button>
+    <button @click="sayBye('hello', 9)">Say Bye</button>
     <button @click="changeArt">click</button>
     <input type="text" model="name">
     {{this.art}}
@@ -33,8 +33,8 @@
       hihi(art, num) {
         console.log(art, num);
       },
-      sayBye(arg) {
-        console.log('ByeBye', arg);
+      sayBye(...arg) {
+        console.log('ByeBye', ...arg);
         
       },
       changeArt() {

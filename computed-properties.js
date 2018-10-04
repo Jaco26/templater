@@ -1,3 +1,38 @@
+
+
+function handleData(vDom, data) {
+  Object.keys(data).forEach(key => {
+    Object.defineProperty(vDom, key, {
+      get: () => data[key],
+      set: val => {
+        data[key] = val;
+        notifyVDom(key);
+      },
+    });
+  });
+}
+
+function notifyVDom() {
+
+}
+
+function handleComputed(data, computed) {
+  Object.keys(data)
+}
+
+
+function withComputed(data, computed) {
+
+  const vDom = {
+
+  };
+
+  handleData(data);
+  handleComputed(computed);
+
+}
+
+
 class WithComputedProps {
   constructor({ data, computed }) {
     this.test = 'Hello'
@@ -24,10 +59,7 @@ class WithComputedProps {
     });
 
     this.setDepRefs(dataKeys, computed);
-    Object.assign(result, result, this.evaluateComputed(data, computed));
-
-    // console.log(this.computedDependencies);
-    console.log(result);
+    Object.assign(result, this.evaluateComputed(data, computed));
     
   }
 
