@@ -1,11 +1,16 @@
 
 
 class ComputedPropertyWatcher {
-  constructor({ data, methods, computed }) {
+  constructor({ target, template, data, methods, computed }) {
+    this._target = document.querySelector(target);
+    this._template = template || this._target.innerHTML;
     this._data = data;
     this._computed = computed;
     this._methods = methods;
     this._vdom = {
+      templateExpressions: {
+
+      },
       computedDependencies: {
 
       },
@@ -81,6 +86,16 @@ class ComputedPropertyWatcher {
         this._vdom.data[depKey] = this._computed[depKey].call(this._vdom.data);
       }
     });
+  }
+
+  compileTemplate() {
+    const eventTagRe = /<.*?@\w+=".+".*?>/g;
+    const eventDirRe = /@\w+="\w+(\(.*\))*"/g;
+    const modelTagRe = /<.*?model=".+".*?>/g;
+    const modelDirRe = /model="\w+"/g;
+    const handleBarRe = /{{.+?}}/g;
+    const dataDepRe = /this\.\w+/g;
+
   }
 
 }
