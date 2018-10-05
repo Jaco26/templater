@@ -9,6 +9,8 @@
 </head>
 <body>
 
+  <h1>Hello</h1>
+
   <div id="app">
     <h1 @click="changeGreeting">{{this.greeting + ' ' + this.name}}</h1>
     <button @click="hihi(this.art, 9)">Click Me</button>
@@ -18,37 +20,58 @@
     {{this.art}}
   </div>
 
-  <script src="reactive-template.js"></script>
+  <script src="computed-properties.js"></script>
   <script>
-  
-  const app = new ReactiveTemplate({
-    target: '#app',
-    data: {
-      greeting: 'Welcome',
-      name: '',
-      art: 'Sculpture',
-      numbers: [1,2,3,4]
-    },
-    methods: {
-      hihi(art, num) {
-        console.log(art, num);
+
+    const app = new ReactiveTemplate({
+      target: '#app',
+      data: {
+        name: 'Jacob',
+        greeting: '',
       },
-      sayBye(...arg) {
-        console.log('ByeBye', ...arg);
-        
+      methods: {
+        introduction() {
+          const name = prompt('Hello! My name is ' + this.name + '! Who are you?');
+          this.greeting = 'Hello ' + name + '! It is great to meet you!';
+        }
       },
-      changeArt() {
-        this.art = 'Hello how are you?'
-      },
-      changeGreeting() {
-        this.greeting = 'HEY!';
+      computed: {
+        nameToUpper() {
+          return this.name.toUpperCase();
+        }
       }
-    }
-  });
+    });
+
+    console.log(app);
+
+  
+  // const app = new ReactiveTemplate({
+  //   target: '#app',
+  //   data: {
+  //     greeting: 'Welcome',
+  //     name: '',
+  //     art: 'Sculpture',
+  //     numbers: [1,2,3,4]
+  //   },
+  //   methods: {
+  //     hihi(art, num) {
+  //       console.log(art, num);
+  //     },
+  //     sayBye(...arg) {
+  //       console.log('ByeBye', ...arg);
+        
+  //     },
+  //     changeArt() {
+  //       this.art = 'Hello how are you?'
+  //     },
+  //     changeGreeting() {
+  //       this.greeting = 'HEY!';
+  //     }
+  //   }
+  // });
 
   </script>
 
-  <script src="computed-properties.js"></script>
 
 </body>
 </html>

@@ -1,14 +1,36 @@
+const utils = {
+  evaluate: function (exprStr) {
+    const func = Function('"use strict";return (' + exprStr + ')');    
+    return func.call(this);
+  },
+  parseTemplateFnInvoke: function(fnInvokeStr) {
+    const wArgsRe = /\w+\(.+\)/g;
+    const parensWArgsRe = /\(.+\)/g;
+    const handler = {
+      name: fnInvokeStr.match(/\w+/g)[0], // in case the fnInvokeStr ends with `()`
+      args: [],
+    };
+    if (wArgsRe.test(fnInvokeStr)) {
+      handler.args = fnInvokeStr.match(parensWArgsRe)[0] // => "(arg1, arg2, ...)"
+        .slice(1, -1) // => "arg1, arg2, ..."
+        .split(',') // => ["arg1", " arg2", ...]
+        .map(arg => arg.trim()); // => ["arg1", "arg2", ...] 
+    } 
+    return handler;
+  }
+}
 
-
-class ComputedPropertyWatcher {
+class ReactiveTemplate{
   constructor({ target, template, data, methods, computed }) {
     this._target = document.querySelector(target);
-    this._template = template || this._target.innerHTML;
     this._data = data;
     this._computed = computed;
     this._methods = methods;
     this._vdom = {
       templateExpressions: {
+
+      },
+      templateEventDirectives: {
 
       },
       computedDependencies: {
@@ -22,6 +44,7 @@ class ComputedPropertyWatcher {
     this.wrapData();
     this.wrapComputed();
     this.wrapMethods();
+    this.compileTemplate(template || this._target.innerHTML)
   }
 
   wrapData() {
@@ -88,13 +111,39 @@ class ComputedPropertyWatcher {
     });
   }
 
-  compileTemplate() {
+  compileTemplate(inputTemplate) {
     const eventTagRe = /<.*?@\w+=".+".*?>/g;
     const eventDirRe = /@\w+="\w+(\(.*\))*"/g;
     const modelTagRe = /<.*?model=".+".*?>/g;
     const modelDirRe = /model="\w+"/g;
     const handleBarRe = /{{.+?}}/g;
     const dataDepRe = /this\.\w+/g;
+
+    let template = inputTemplate;
+
+    let eventListenerCount = 1;
+    let modelCount = 1;
+    let expressionCount = 1;
+
+    const tagsWithEventDirectives = template.match(eventTagRe);
+    if (tagsWithEventDirectives) {
+      tagsWithEventDirectives.forEach(tag => {
+        let newTag = tag;        
+        const tagEvents = newTag.match(eventDirRe);
+        tagEvents.forEach((evt, i) => {
+          const evtName = evt.slice(1, evt.indexOf('='));
+          const fnInokeStr = evt.slice(evt.indexOf('=') + 2, -1);          
+          this._vDom.templateEventDirectives[eventListenerCount] = {
+            eventName: evtName,
+            domKey: `[data-event${i + 1}-id="${eventListenerCount}"]`,
+            handler: utils.parseTemplateFnInvoke(fnInokeStr)
+          };          
+          newTag = newTag.replace(evt, `data-event${i + 1}-id="${eventListenerCount}"`);
+          eventListenerCount += 1;
+        });
+        template = template.replace(tag, newTag);
+      });
+    }
 
   }
 
@@ -103,37 +152,36 @@ class ComputedPropertyWatcher {
 
 
 
-let counter = 0
-const instance = new ComputedPropertyWatcher({
-  data: {
-    name: 'Jacob',
-    num: 1,
-    num2: 55,
-  },
-  methods: {
-    listThis() {
-      console.log(this.name, this.num, this.num2);      
-    },
-  },
-  computed: {
-    nameToUpper() {
-      return this.name.toUpperCase();
-    },
-    sumOfNums() {
-      return this.num + this.num2;
-    }
-  }
-})
+// const instance = new ComputedPropertyWatcher({
+//   data: {
+//     name: 'Jacob',
+//     num: 1,
+//     num2: 55,
+//   },
+//   methods: {
+//     listThis() {
+//       console.log(this.name, this.num, this.num2);      
+//     },
+//   },
+//   computed: {
+//     nameToUpper() {
+//       return this.name.toUpperCase();
+//     },
+//     sumOfNums() {
+//       return this.num + this.num2;
+//     }
+//   }
+// })
 
-console.log(instance._vdom.data);
+// console.log(instance._vdom.data);
 
-instance._vdom.data.name = 'Caroline'
-instance._vdom.data.num2 = 22
+// instance._vdom.data.name = 'Caroline'
+// instance._vdom.data.num2 = 22
 
-console.log(instance._vdom.data);
+// console.log(instance._vdom.data);
 
-instance._vdom.data.num2 = 12
+// instance._vdom.data.num2 = 12
 
-console.log(instance._vdom.data);
+// console.log(instance._vdom.data);
 
-instance._vdom.data.listThis()
+// instance._vdom.data.listThis()
