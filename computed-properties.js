@@ -1,11 +1,12 @@
 
 
 class ComputedPropertyWatcher {
-  constructor({ data, computed }) {
+  constructor({ data, methods, computed }) {
     this._data = data;
     this._computed = computed;
+    this._methods = methods;
     this._vdom = {
-      compDependencies: {
+      computedDependencies: {
 
       },
       data: {
@@ -15,6 +16,7 @@ class ComputedPropertyWatcher {
 
     this.wrapData();
     this.wrapComputed();
+    this.wrapMethods();
   }
 
   wrapData() {
@@ -30,10 +32,14 @@ class ComputedPropertyWatcher {
   }
 
   wrapComputed() {
+    // Each time a computed proprty function references 'this.<someKey>',
+    // cache that key as a dependecy of the computed property (registered undeder the
+    // computed property's name). When a this._data property changes, this.notifyDependencies
+    // invoke all computed properties who cached that dataKey as a dependency
     Object.keys(this._computed).forEach(key => {
       const fnStr = this._computed[key].toString();
       const fnBodyStr = fnStr.slice(fnStr.indexOf('{') + 1, fnStr.lastIndexOf('}'));
-      this._vdom.compDependencies[key] = Object.keys(this._data).reduce((accum, dataKey) => {
+      this._vdom.computedDependencies[key] = Object.keys(this._data).reduce((accum, dataKey) => {
         if (fnBodyStr.match('this.' + dataKey)) {
           accum.push(dataKey);
         }
@@ -47,6 +53,11 @@ class ComputedPropertyWatcher {
     });
   }
 
+  wrapMethods() {
+    Object.keys(this._methods).forEach(key => {
+      this._vdom.data[key] = this._methods[key];
+    });
+  }
 
   setDepRefs(dataKeys, computed) {
     let compPropsCount = 1;
@@ -64,7 +75,7 @@ class ComputedPropertyWatcher {
   }
 
   notifyDependencies(dataKey) {
-    const compDependencies = this._vdom.compDependencies
+    const compDependencies = this._vdom.computedDependencies
     Object.keys(compDependencies).forEach(depKey => {
       if (compDependencies[depKey].includes(dataKey)) {        
         this._vdom.data[depKey] = this._computed[depKey].call(this._vdom.data);
@@ -72,8 +83,10 @@ class ComputedPropertyWatcher {
     });
   }
 
-
 }
+
+
+
 
 let counter = 0
 const instance = new ComputedPropertyWatcher({
@@ -81,6 +94,11 @@ const instance = new ComputedPropertyWatcher({
     name: 'Jacob',
     num: 1,
     num2: 55,
+  },
+  methods: {
+    listThis() {
+      console.log(this.name, this.num, this.num2);      
+    },
   },
   computed: {
     nameToUpper() {
@@ -103,3 +121,4 @@ instance._vdom.data.num2 = 12
 
 console.log(instance._vdom.data);
 
+instance._vdom.data.listThis()
