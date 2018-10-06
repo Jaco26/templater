@@ -21,8 +21,9 @@ const utils = {
 }
 
 class ReactiveTemplate{
-  constructor({ target, template, data, methods, computed }) {
+  constructor({ target, template, templateScope, data, methods, computed }) {
     this._target = document.querySelector(target);
+    this._templateScope = templateScope || 'this'
     this._data = data;
     this._computed = computed;
     this._methods = methods;
@@ -68,7 +69,7 @@ class ReactiveTemplate{
       const fnStr = this._computed[key].toString();
       const fnBodyStr = fnStr.slice(fnStr.indexOf('{') + 1, fnStr.lastIndexOf('}'));
       this._vdom.computedDependencies[key] = Object.keys(this._data).reduce((accum, dataKey) => {
-        if (fnBodyStr.match('this.' + dataKey)) {
+        if (fnBodyStr.match(`${this._templateScope}.` + dataKey)) {
           accum.push(dataKey);
         }
         return accum;
@@ -142,6 +143,17 @@ class ReactiveTemplate{
           eventListenerCount += 1;
         });
         template = template.replace(tag, newTag);
+      });
+    }
+
+    const templateExpressions = template.match(handleBarRe);
+    if (templateExpressions) {
+      templateExpressions.forEach(expression => {
+        this._vdom.templateExpressions[expressionCount] = {
+          exp: expression.slice(2, -2).trim(),
+          domKey: `[data-exp-id="${expressionCount}"]`,
+        };
+        
       });
     }
 
