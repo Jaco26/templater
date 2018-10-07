@@ -28,18 +28,11 @@ class ReactiveTemplate{
     this._computed = computed;
     this._methods = methods;
     this._vdom = {
-      templateExpressions: {
-
-      },
-      templateEventDirectives: {
-
-      },
-      computedDependencies: {
-
-      },
-      data: {
-
-      },
+      templateExpressions: {},
+      templateEventDirectives: {},
+      templateDataDependents: {},
+      computedDependencies: {},
+      data: {},
     };
 
     this.wrapData();
@@ -149,11 +142,24 @@ class ReactiveTemplate{
     const templateExpressions = template.match(handleBarRe);
     if (templateExpressions) {
       templateExpressions.forEach(expression => {
+        const expressionStr = expression.slice(2, -2).trim()
         this._vdom.templateExpressions[expressionCount] = {
-          exp: expression.slice(2, -2).trim(),
+          exp: expressionStr,
           domKey: `[data-exp-id="${expressionCount}"]`,
         };
-        
+        const dataDependencies = expressionStr.match(dataDepRe);
+        if (dataDependencies) {
+          dataDependencies.forEach(dep => {
+            const depKey = dep.slice(dep.indexOf('.') + 1);
+            if (!this._vdom.templateDataDependents[depKey]) {
+              // handle error
+            } else {
+              this._vdom.templateDataDependents[depKey] = [...this._vdom.templateDataDependents[depKey], expressionCount];
+            }
+          });
+        }
+        template = template.replace(expression, `<span data-exp-id="${expressionCount}"></span>`);
+        expressionCount += 1;
       });
     }
 
